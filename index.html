@@ -17,7 +17,16 @@
                 <li><a href="#">Trang chủ</a></li>
                 <li><a href="#">Menu</a></li>
                 <li><a href="#"><i class="fa-solid fa-cart-shopping"></i></a></li>
-                <li><a href="login.html"><i class="fa-solid fa-user"></i></a></li>
+                <li class="user-menu-wrapper">
+                    <a href="login.html" id="userMenuToggle" class="user-menu-toggle" aria-expanded="false" aria-haspopup="true">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                    <div id="userDropdown" class="user-dropdown hidden" role="menu">
+                        <button type="button" class="dropdown-item" data-action="profile">Xem profile</button>
+                        <button type="button" class="dropdown-item" data-action="orders">Đơn hàng</button>
+                        <button type="button" class="dropdown-item logout" data-action="logout">Đăng xuất</button>
+                    </div>
+                </li>
             </ul>
         </nav>
     </header>
@@ -32,5 +41,78 @@
             <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=500" alt="Coffee Cup">
         </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+
+    <script>
+        const userMenuToggle = document.getElementById('userMenuToggle');
+        const userDropdown = document.getElementById('userDropdown');
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+        function closeDropdown() {
+            userDropdown.classList.add('hidden');
+            userMenuToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        function openDropdown() {
+            userDropdown.classList.remove('hidden');
+            userMenuToggle.setAttribute('aria-expanded', 'true');
+        }
+
+        async function renderAuthUI() {
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+
+            if (user) {
+                const displayName = user.user_metadata?.full_name || user.email || 'U';
+                const initial = displayName.toString().trim().charAt(0).toUpperCase();
+
+                userMenuToggle.href = '#';
+                userMenuToggle.innerHTML = `<span class="avatar-circle">${initial}</span>`;
+                userMenuToggle.classList.add('avatar-button');
+                userMenuToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const isHidden = userDropdown.classList.contains('hidden');
+                    if (isHidden) {
+                        openDropdown();
+                    } else {
+                        closeDropdown();
+                    }
+                });
+            } else {
+                userMenuToggle.href = 'login.html';
+                userMenuToggle.innerHTML = '<i class="fa-solid fa-user"></i>';
+                userMenuToggle.classList.remove('avatar-button');
+                closeDropdown();
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu-wrapper')) {
+                closeDropdown();
+            }
+        });
+
+        dropdownItems.forEach((item) => {
+            item.addEventListener('click', async () => {
+                const action = item.getAttribute('data-action');
+                closeDropdown();
+
+                if (action === 'logout') {
+                    await window.supabaseClient.auth.signOut();
+                    window.location.href = 'login.html';
+                } else if (action === 'profile') {
+                    alert('Tính năng xem profile sẽ được cập nhật sau.');
+                } else if (action === 'orders') {
+                    alert('Tính năng đơn hàng sẽ được cập nhật sau.');
+                }
+            });
+        });
+
+        renderAuthUI();
+
+        window.supabaseClient.auth.onAuthStateChange(() => {
+            renderAuthUI();
+        });
+    </script>
 </body>
 </html>

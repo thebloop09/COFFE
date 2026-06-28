@@ -12,19 +12,60 @@
         <div class="auth-box">
             <h1>Coffee Management System</h1>
             <h3>Đăng nhập</h3>
-            <form>
+            <form id="loginForm">
                 <div class="input-group">
                     <i class="fa-solid fa-envelope"></i>
-                    <input type="email" placeholder="Email" required>
+                    <input id="email" type="email" placeholder="Email" required>
                 </div>
                 <div class="input-group">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" placeholder="Password" required>
+                    <input id="password" type="password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="btn-submit">Đăng nhập</button>
+                <p id="loginMessage" style="margin-top: 12px; color: #0f766e;"></p>
             </form>
             <p class="auth-footer">Chưa có tài khoản? <a href="register.html">Đăng ký</a></p>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginMessage = document.getElementById('loginMessage');
+
+        async function redirectIfLoggedIn() {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            loginMessage.textContent = 'Đang đăng nhập...';
+            loginMessage.style.color = '#0f766e';
+
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                loginMessage.textContent = error.message;
+                loginMessage.style.color = '#b91c1c';
+            } else {
+                loginMessage.textContent = 'Đăng nhập thành công! Đang chuyển hướng...';
+                loginMessage.style.color = '#0f766e';
+                window.location.href = 'index.html';
+            }
+        });
+
+        redirectIfLoggedIn();
+    </script>
 </body>
 </html>
